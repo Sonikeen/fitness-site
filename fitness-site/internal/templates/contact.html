@@ -1,0 +1,36 @@
+{{ define "title" }}Контакты — FitPro{{ end }}
+
+{{ define "content" }}
+<h1>Связаться с нами</h1>
+<p>Email: support@fitpro.ru</p>
+<p>Телефон: +7 900 123-45-67</p>
+
+<h2>Обратная связь</h2>
+<form action="/contact" method="post">
+    <label for="name">Имя:</label><br>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="message">Сообщение:</label><br>
+    <textarea id="message" name="message" required></textarea><br><br>
+
+    <input type="submit" value="Отправить">
+</form>
+
+<h2>Регистрация</h2>
+<p>Заполните форму ниже для регистрации на сайте:</p>
+<form action="/register" method="post">
+    <label for="username">Имя пользователя:</label><br>
+    <input type="text" id="username" name="username" required><br><br>
+
+    <label for="email">Email:</label><br>
+    <input type="email" id="email" name="email" required><br><br>
+
+    <label for="password">Пароль:</label><br>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <label for="confirm_password">Подтверждение пароля:</label><br>
+    <input type="password" id="confirm_password" name="confirm_password" required><br><br>
+
+    <input type="submit" value="Зарегистрироваться">
+</form>
+{{ end }}

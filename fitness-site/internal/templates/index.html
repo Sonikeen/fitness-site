@@ -1,17 +1,12 @@
-<!DOCTYPE html>
-<html lang="ru">
+{{ define "title" }}FitElevate — Современный фитнес{{ end }}
 
-<head>
-    <meta charset="UTF-8">
-    <title>FitPro — Главная</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-
-<body>
-    <header>
-        <h1>Добро пожаловать в FitPro!</h1>
-        <p>Онлайн и оффлайн тренировки с профессионалами</p>
-    </header>
-</body>
-
-</html>
+{{ define "content" }}
+<section class="hero">
+    <div class="hero-content">
+        <h2>Современный подход к фитнесу</h2>
+        <p>Ничего лишнего. Только структура, эффективность и результат. Индивидуальные программы и строгий визуальный
+            стиль для тех, кто ценит время.</p>
+        <a href="/services" class="cta-button">Начать</a>
+    </div>
+</section>
+{{ end }}

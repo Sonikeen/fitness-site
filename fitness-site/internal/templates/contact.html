@@ -1,36 +1,63 @@
-{{ define "title" }}Контакты — FitPro{{ end }}
+{{ define "title" }}Вход и регистрация — FitElevate{{ end }}
 
 {{ define "content" }}
-<h1>Связаться с нами</h1>
-<p>Email: support@fitpro.ru</p>
-<p>Телефон: +7 900 123-45-67</p>
+<section class="auth-section">
+    <div class="form-container">
+        <div class="form-toggle">
+            <button id="show-register" class="active">Регистрация</button>
+            <button id="show-login">Вход</button>
+        </div>
 
-<h2>Обратная связь</h2>
-<form action="/contact" method="post">
-    <label for="name">Имя:</label><br>
-    <input type="text" id="name" name="name" required><br><br>
+        <!-- Регистрация -->
+        <form id="register-form" action="/register" method="post">
+            <h2>Регистрация</h2>
+            <label for="username">Имя пользователя</label>
+            <input type="text" id="username" name="username" required>
 
-    <label for="message">Сообщение:</label><br>
-    <textarea id="message" name="message" required></textarea><br><br>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
 
-    <input type="submit" value="Отправить">
-</form>
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" required>
 
-<h2>Регистрация</h2>
-<p>Заполните форму ниже для регистрации на сайте:</p>
-<form action="/register" method="post">
-    <label for="username">Имя пользователя:</label><br>
-    <input type="text" id="username" name="username" required><br><br>
+            <label for="confirm">Подтвердите пароль</label>
+            <input type="password" id="confirm" name="confirm" required>
 
-    <label for="email">Email:</label><br>
-    <input type="email" id="email" name="email" required><br><br>
+            <button type="submit" class="cta-button">Зарегистрироваться</button>
+        </form>
 
-    <label for="password">Пароль:</label><br>
-    <input type="password" id="password" name="password" required><br><br>
+        <!-- Вход -->
+        <form id="login-form" action="/login" method="post" style="display: none;">
+            <h2>Вход</h2>
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" required>
 
-    <label for="confirm_password">Подтверждение пароля:</label><br>
-    <input type="password" id="confirm_password" name="confirm_password" required><br><br>
+            <label for="login-password">Пароль</label>
+            <input type="password" id="login-password" name="password" required>
 
-    <input type="submit" value="Зарегистрироваться">
-</form>
+            <button type="submit" class="cta-button">Войти</button>
+        </form>
+    </div>
+</section>
+
+<script>
+    const showRegisterBtn = document.getElementById('show-register');
+    const showLoginBtn = document.getElementById('show-login');
+    const registerForm = document.getElementById('register-form');
+    const loginForm = document.getElementById('login-form');
+
+    showRegisterBtn.addEventListener('click', () => {
+        registerForm.style.display = 'block';
+        loginForm.style.display = 'none';
+        showRegisterBtn.classList.add('active');
+        showLoginBtn.classList.remove('active');
+    });
+
+    showLoginBtn.addEventListener('click', () => {
+        registerForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        showLoginBtn.classList.add('active');
+        showRegisterBtn.classList.remove('active');
+    });
+</script>
 {{ end }}

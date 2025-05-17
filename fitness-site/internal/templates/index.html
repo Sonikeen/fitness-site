@@ -1,11 +1,27 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ template "title" . }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    {{ template "content" . }}
+</body>
+
+</html>
+{{ end }}
+
 {{ define "title" }}FitElevate — Современный фитнес{{ end }}
 
 {{ define "content" }}
 <section class="hero">
     <div class="hero-content">
         <h2>Современный подход к фитнесу</h2>
-        <p>Ничего лишнего. Только структура, эффективность и результат. Индивидуальные программы и строгий визуальный
-            стиль для тех, кто ценит время.</p>
+        <p>Ничего лишнего…</p>
         <a href="/services" class="cta-button">Начать</a>
     </div>
 </section>

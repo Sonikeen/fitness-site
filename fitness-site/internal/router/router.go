@@ -3,35 +3,47 @@ package router
 import (
     "net/http"
 
+    chi "github.com/go-chi/chi/v5"
+    chiMiddleware "github.com/go-chi/chi/v5/middleware"
+
     "fitness-site/internal/handlers"
+    "fitness-site/internal/middleware"
 )
 
-func SetupRoutes() http.Handler {
-    mux := http.NewServeMux()
+// SetupRouter настраивает все маршруты и возвращает HTTP-роутер
+func SetupRouter() http.Handler {
+    r := chi.NewRouter()
+    r.Use(middleware.SessionMiddleware)
 
-    // 1) Раздача статики
-    mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+    // Chi встроенные middleware
+    r.Use(chiMiddleware.RealIP, chiMiddleware.Logger, chiMiddleware.Recoverer)
 
-    // 2) Основные страницы
-    mux.HandleFunc("/",         handler.HomeHandler)
-    mux.HandleFunc("/about",    handler.AboutHandler)
-    mux.HandleFunc("/services", handler.ServicesHandler)
-    mux.HandleFunc("/contact",  handler.ContactHandler)
+    // Статика
+    fileServer := http.FileServer(http.Dir("static"))
+    r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 
-    // 3) Регистрация (HTML и JSON)
-    mux.HandleFunc("/register",     handler.RegisterHandlers)
-    mux.HandleFunc("/api/register", handler.APIRegisterHandler)
+    // Публичные страницы
+    r.Get("/", handlers.HomePage)
+    r.Get("/services", handlers.ServicesPage)
+    r.Get("/about", handlers.AboutPage)
+    r.Get("/contact", handlers.ContactPage)
 
-    // 4) Тренировки
-    mux.HandleFunc("/workouts",     handler.WorkoutListHandler)
-    mux.HandleFunc("/workouts/new", handler.WorkoutCreateHandler)
+    // Регистрация и вход
+    r.Get("/register", handlers.ShowRegister)
+    r.Post("/register", handlers.HandleRegister)
+    r.Get("/login", handlers.ShowLogin)
+    r.Post("/login", handlers.HandleLogin)
 
-    // 5) Подписки
-    mux.HandleFunc("/subscriptions",     handler.SubscriptionListHandler)
-    mux.HandleFunc("/subscriptions/new", handler.SubscriptionCreateHandler)
-
-    // 6) Остальные ваши обработчики (subscription, user, etc.)
-    // e.g. mux.HandleFunc("/user", handlers.UserHandler) ...
-
-    return mux
+    // Защищённые маршруты: список программ и прогресс
+    r.Route("/programs", func(r chi.Router) {
+        r.Use(middleware.AuthMiddleware)
+        r.Get("/", handlers.ProgramList)         // ← теперь определён в program.go
+        r.Get("/{id}", handlers.ProgramDetail)
+        r.Post("/{id}/progress", handlers.TrackProgress)
+    })
+    // Личный кабинет
+    r.With(middleware.AuthMiddleware).
+        Get("/dashboard", handlers.Dashboard)
+    
+        return r
 }

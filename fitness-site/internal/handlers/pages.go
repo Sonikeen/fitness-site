@@ -1,46 +1,33 @@
-package handler
+package handlers
 
 import (
+    "net/http"
+    "html/template"
+    "path/filepath"
 	"fmt"
-	"html/template"
-	"log"
-	"net/http"
 )
 
-func renderTemplate(w http.ResponseWriter, tmpl string) {
-	t, err := template.ParseFiles(
-		"internal/templates/base.html",
-		"internal/templates/"+tmpl+".html",
-	)
-	if err != nil {
-		log.Println("Ошибка шаблона:", err)
-		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-
-	t.Execute(w, nil)
+// render упрощает рендеринг: базовый шаблон + конкретный tmpl
+func render(w http.ResponseWriter, tmpl string, data interface{}) {
+    t := template.Must(template.ParseFiles(
+        filepath.Join("internal", "templates", "base.html"),
+        filepath.Join("internal", "templates", tmpl),
+    ))
+    t.ExecuteTemplate(w, "base", data)
 }
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "index")
+// HomePage — обработчик корня "/"
+func HomePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("=== HomePage reached ===") 
+    render(w, "index.html", map[string]string{"Title": "Главная"})
 }
 
-func AboutHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "about")
+// AboutPage — обработчик "/about"
+func AboutPage(w http.ResponseWriter, r *http.Request) {
+    render(w, "about.html", map[string]string{"Title": "О нас"})
 }
 
-func ServicesHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "services")
-}
-
-func ContactHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		name := r.FormValue("name")
-		message := r.FormValue("message")
-		log.Printf("Новое сообщение от %s: %s\n", name, message)
-
-		fmt.Fprintf(w, "<h1>Спасибо, %s!</h1><p>Ваше сообщение получено.</p><a href='/'>На главную</a>", name)
-		return
-	}
-	renderTemplate(w, "contact")
+// ContactPage — обработчик "/contact"
+func ContactPage(w http.ResponseWriter, r *http.Request) {
+    render(w, "contact.html", map[string]string{"Title": "Контакты"})
 }

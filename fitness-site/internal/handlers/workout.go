@@ -1,5 +1,4 @@
-package handler
-
+package handlers
 import (
 	"fitness-site/internal/models"
 	"fitness-site/internal/storage"
@@ -7,19 +6,15 @@ import (
 	"net/http"
 	"strconv"
 )
-
-// Показать все тренировки
 func WorkoutListHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, "<h1>Список тренировок</h1>")
 	for _, workout := range storage.GetAllWorkouts() {
 		fmt.Fprintf(w, "<p>ID: %d | Название: %s | Длительность: %d мин</p>",
-			workout.ID, workout.Title, workout.Duration)
+			workout.ID, workout.Description, workout.Duration)
 	}
 	fmt.Fprint(w, `<br><a href="/workouts/new">Добавить тренировку</a>`)
 }
-
-// Страница добавления тренировки (GET) + обработка формы (POST)
 func WorkoutCreateHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -36,13 +31,10 @@ func WorkoutCreateHandler(w http.ResponseWriter, r *http.Request) {
 		`)
 		return
 	}
-
-	// POST
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Ошибка обработки формы", http.StatusBadRequest)
 		return
 	}
-
 	title := r.FormValue("title")
 	durationStr := r.FormValue("duration")
 	duration, err := strconv.Atoi(durationStr)
@@ -50,12 +42,10 @@ func WorkoutCreateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Длительность должна быть числом", http.StatusBadRequest)
 		return
 	}
-
-	newWorkout := model.Workout{
-		Title:    title,
+	newWorkout := models.Workout{
+		Description:    title,
 		Duration: duration,
 	}
 	storage.AddWorkout(newWorkout)
-
 	http.Redirect(w, r, "/workouts", http.StatusSeeOther)
 }

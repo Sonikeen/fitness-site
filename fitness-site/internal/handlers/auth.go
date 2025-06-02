@@ -1,42 +1,31 @@
 package handlers
 
 import (
-    "fmt"
     "net/http"
     "strings"
+
     "github.com/jackc/pgx/v5/pgconn"
-    "fitness-site/internal/middleware"
-    "fitness-site/db"
     "fitness-site/internal/models"
-    "fitness-site/internal/service"
-    "fitness-site/internal/storage"
+    "fitness-site/internal/middleware"
 )
 
-var userSvc *service.UserService
-
-func init() {
-    db.Connect()
-    us := storage.NewUserStorage(db.Conn)
-    userSvc = service.NewUserService(us)
-}
-
+// ShowRegister отображает форму регистрации.
 func ShowRegister(w http.ResponseWriter, r *http.Request) {
     render(w, "register.html", map[string]interface{}{"Error": ""})
 }
 
+// HandleRegister обрабатывает POST /register.
 func HandleRegister(w http.ResponseWriter, r *http.Request) {
     if err := r.ParseForm(); err != nil {
         render(w, "register.html", map[string]interface{}{"Error": "Неверные данные формы"})
         return
     }
 
-    // Теперь читаем из поля "username"
     username := strings.TrimSpace(r.FormValue("username"))
     email := strings.TrimSpace(r.FormValue("email"))
     pass := strings.TrimSpace(r.FormValue("password"))
 
-    fmt.Printf("DEBUG Register: username=%q email=%q password=%q\n", username, email, pass)
-
+    // Простая валидация на пустые поля
     if username == "" || email == "" || pass == "" {
         render(w, "register.html", map[string]interface{}{
             "Error": "Пожалуйста, заполните имя пользователя, email и пароль",
@@ -45,60 +34,84 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
     }
 
     u := &models.User{
-        Name:     username,  // модельное поле Name сохраняется в колонку username
+        Name:     username,
         Email:    email,
-        Password: pass,
+        PasswordHash: pass,
     }
-    if err := userSvc.Register(u); err != nil {
+
+    // Пытаемся зарегистрировать через сервис
+    if err := UserService.Register(r.Context(), u); err != nil {
+        // Пытаемся распознать код PG 23505 — уникальное ограничение нарушено
         if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
-            if strings.Contains(pgErr.ConstraintName, "username") {
+            // constraint может быть "users_username_key" или "users_email_key"
+            if strings.Contains(pgErr.ConstraintName, "users_username_key") {
                 render(w, "register.html", map[string]interface{}{"Error": "Имя пользователя уже занято"})
                 return
             }
-            if strings.Contains(pgErr.ConstraintName, "email") {
+            if strings.Contains(pgErr.ConstraintName, "users_email_key") {
                 render(w, "register.html", map[string]interface{}{"Error": "Email уже зарегистрирован"})
                 return
             }
         }
+        // Любая другая ошибка
         render(w, "register.html", map[string]interface{}{
             "Error": "Ошибка регистрации: " + err.Error(),
         })
         return
     }
 
+    // Успешно — перенаправляем на страницу входа
     http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+// ShowLogin отображает форму входа.
 func ShowLogin(w http.ResponseWriter, r *http.Request) {
-    render(w, "login.html", nil)
+    render(w, "login.html", map[string]interface{}{"Error": ""})
 }
 
+// HandleLogin обрабатывает POST /login.
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
     if err := r.ParseForm(); err != nil {
-        http.Error(w, "Неверные данные", http.StatusBadRequest)
+        render(w, "login.html", map[string]interface{}{"Error": "Неверные данные"})
         return
     }
     email := strings.TrimSpace(r.FormValue("email"))
     pass := strings.TrimSpace(r.FormValue("password"))
 
-    user, err := userSvc.Authenticate(email, pass)
+    user, err := UserService.Authenticate(r.Context(), email, pass)
     if err != nil {
-        http.Error(w, "Неверный email или пароль", http.StatusUnauthorized)
+        render(w, "login.html", map[string]interface{}{"Error": "Неверный email или пароль"})
         return
     }
-    // вместо контекста — создаём сессию
+
     sid, err := middleware.CreateSession(user.ID)
     if err != nil {
-        http.Error(w, "Ошибка создания сессии", http.StatusInternalServerError)
+        render(w, "login.html", map[string]interface{}{"Error": "Ошибка создания сессии"})
         return
     }
-    // ставим HTTP-cookie
     http.SetCookie(w, &http.Cookie{
         Name:     "session_id",
         Value:    sid,
         Path:     "/",
         HttpOnly: true,
-        // Secure: true, // в проде по https
     })
-    http.Redirect(w, r, "/services", http.StatusSeeOther)
+
+    http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
+// LogoutHandler разрывает сессию и перенаправляет на /login.
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    cookie, err := r.Cookie("session_id")
+    if err == nil {
+        sid := cookie.Value
+        middleware.DeleteSession(sid)
+        http.SetCookie(w, &http.Cookie{
+            Name:     "session_id",
+            Value:    "",
+            Path:     "/",
+            HttpOnly: true,
+            MaxAge:   -1,
+        })
+    }
+    http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

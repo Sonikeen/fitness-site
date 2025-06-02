@@ -11,7 +11,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		user := models.User{
 			Name:     r.FormValue("name"),
 			Email:    r.FormValue("email"),
-			Password: r.FormValue("password"), // В реальном проекте нужно хешировать!
+			PasswordHash: r.FormValue("password"), // В реальном проекте нужно хешировать!
 		}
 		users = append(users, user)
 		log.Printf("Зарегистрирован пользователь: %s (%s)\n", user.Name, user.Email)
@@ -25,7 +25,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		for _, u := range users {
-			if u.Email == email && u.Password == password {
+			if u.Email == email && u.PasswordHash == password {
 				log.Printf("Успешный вход: %s", email)
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 				return

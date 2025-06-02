@@ -2,9 +2,9 @@ package handlers
 
 import (
     "net/http"
-
-    "fitness-site/internal/middleware"
     "fitness-site/internal/models"
+    "fitness-site/internal/middleware"
+    "log"
 )
 
 // ServicesPageData — данные для шаблона services.html
@@ -15,14 +15,15 @@ type ServicesPageData struct {
 
 // ServicesPage выводит список программ и кнопку «Начать» или «Войти»
 func ServicesPage(w http.ResponseWriter, r *http.Request) {
-    progs, err := programService.GetAllPrograms()
+    progs, err := ProgramService.GetAllPrograms(r.Context())
+
     if err != nil {
-        http.Error(w, "Ошибка получения программ", http.StatusInternalServerError)
+        log.Printf("Ошибка получения программ: %v", err) // <-- будет видно в консоли
+        http.Error(w, "Ошибка получения программ: "+err.Error(), http.StatusInternalServerError)
         return
     }
 
-    // Вот здесь мы должны смотреть в middleware.UserIDKey
-    _, loggedIn := r.Context().Value(middleware.UserIDKey).(int)
+    _, loggedIn := middleware.UserIDFromContext(r.Context())
 
     data := ServicesPageData{
         Programs: progs,

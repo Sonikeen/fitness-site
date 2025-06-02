@@ -1,43 +1,60 @@
 package storage
 
 import (
-	"fitness-site/internal/models"
 	"sync"
+
+	"fitness-site/internal/models"
 )
 
 var (
-	workouts   = []model.Workout{}
-	nextID     = 1
-	workoutMux sync.Mutex
+	// Вспомогательное in-memory хранилище тренировок (для тестов/демо).
+	workoutsInMemory = []models.Workout{}
+	nextWorkoutID    = 1
+	workoutInMemMux  sync.Mutex
 )
 
-func GetAllWorkouts() []model.Workout {
-	return workouts
+// GetAllWorkouts возвращает копию всех тренировок из памяти.
+func GetAllWorkouts() []models.Workout {
+	workoutInMemMux.Lock()
+	defer workoutInMemMux.Unlock()
+
+	copied := make([]models.Workout, len(workoutsInMemory))
+	copy(copied, workoutsInMemory)
+	return copied
 }
 
-func GetWorkoutByID(id int) *model.Workout {
-	for _, w := range workouts {
+// GetWorkoutByID ищет тренировку по ID и возвращает копию или nil.
+func GetWorkoutByID(id int) *models.Workout {
+	workoutInMemMux.Lock()
+	defer workoutInMemMux.Unlock()
+
+	for _, w := range workoutsInMemory {
 		if w.ID == id {
-			return &w
+			copyW := w
+			return &copyW
 		}
 	}
 	return nil
 }
 
-func AddWorkout(w model.Workout) {
-	workoutMux.Lock()
-	defer workoutMux.Unlock()
-	w.ID = nextID
-	nextID++
-	workouts = append(workouts, w)
+// AddWorkout присваивает уникальный ID и добавляет тренировку в память.
+func AddWorkout(w models.Workout) {
+	workoutInMemMux.Lock()
+	defer workoutInMemMux.Unlock()
+
+	w.ID = nextWorkoutID
+	nextWorkoutID++
+	workoutsInMemory = append(workoutsInMemory, w)
 }
 
+// DeleteWorkout удаляет из памяти тренировку с заданным ID.
 func DeleteWorkout(id int) {
-	workoutMux.Lock()
-	defer workoutMux.Unlock()
-	for i, w := range workouts {
+	workoutInMemMux.Lock()
+	defer workoutInMemMux.Unlock()
+
+	for i, w := range workoutsInMemory {
 		if w.ID == id {
-			workouts = append(workouts[:i], workouts[i+1:]...)
+			workoutsInMemory = append(workoutsInMemory[:i], workoutsInMemory[i+1:]...)
 			return
 		}
 	}

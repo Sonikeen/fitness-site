@@ -1,11 +1,15 @@
 package handlers
+
 import (
-	"fitness-site/internal/models"
-	"fitness-site/internal/storage"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"fitness-site/internal/models"
+	"fitness-site/internal/storage"
 )
+
+// WorkoutListHandler показывает HTML-список всех тренировок (in-memory).
 func WorkoutListHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, "<h1>Список тренировок</h1>")
@@ -15,8 +19,11 @@ func WorkoutListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprint(w, `<br><a href="/workouts/new">Добавить тренировку</a>`)
 }
+
+// WorkoutCreateHandler обрабатывает GET/POST для добавления тренировки (in-memory).
 func WorkoutCreateHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprint(w, `
 			<h1>Добавить тренировку</h1>
@@ -29,23 +36,25 @@ func WorkoutCreateHandler(w http.ResponseWriter, r *http.Request) {
 			</form>
 			<a href="/workouts">← Назад к списку</a>
 		`)
-		return
+	case http.MethodPost:
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Ошибка обработки формы", http.StatusBadRequest)
+			return
+		}
+		title := r.FormValue("title")
+		durationStr := r.FormValue("duration")
+		duration, err := strconv.Atoi(durationStr)
+		if err != nil {
+			http.Error(w, "Длительность должна быть числом", http.StatusBadRequest)
+			return
+		}
+		newWorkout := models.Workout{
+			Description: title,
+			Duration:    duration,
+		}
+		storage.AddWorkout(newWorkout)
+		http.Redirect(w, r, "/workouts", http.StatusSeeOther)
+	default:
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 	}
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Ошибка обработки формы", http.StatusBadRequest)
-		return
-	}
-	title := r.FormValue("title")
-	durationStr := r.FormValue("duration")
-	duration, err := strconv.Atoi(durationStr)
-	if err != nil {
-		http.Error(w, "Длительность должна быть числом", http.StatusBadRequest)
-		return
-	}
-	newWorkout := models.Workout{
-		Description:    title,
-		Duration: duration,
-	}
-	storage.AddWorkout(newWorkout)
-	http.Redirect(w, r, "/workouts", http.StatusSeeOther)
 }

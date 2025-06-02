@@ -1,87 +1,108 @@
 package handlers
 
 import (
-    "html/template"
-    "net/http"
-    "path/filepath"
-    "strconv"
+	"encoding/json"
+	"net/http"
+	"strconv"
 
-    "github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
 
-    "fitness-site/db"
-    "fitness-site/internal/middleware"
-    "fitness-site/internal/service"
-    "fitness-site/internal/storage"
+	"fitness-site/internal/middleware"
+	"fitness-site/internal/models"
 )
 
-var (
-    programService  *service.ProgramService
-    progressService *service.ProgressService
-)
-
-func init() {
-    db.Connect()
-    progStore := storage.NewProgramStorage(db.Conn)
-    programService = service.NewProgramService(progStore)
-
-    progProgStore := storage.NewProgressStorage(db.Conn)
-    progressService = service.NewProgressService(progProgStore)
+// programSummaryJSON используется для JSON-ответа списка программ.
+type programSummaryJSON struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
 }
 
-// ProgramList — защищённый список программ (GET /programs/)
-func ProgramList(w http.ResponseWriter, r *http.Request) {
-    progs, err := programService.GetAllPrograms()
-    if err != nil {
-        http.Error(w, "Ошибка получения программ", http.StatusInternalServerError)
-        return
-    }
-    render(w, "programs.html", map[string]interface{}{
-        "Programs": progs,
-    })
+// workoutInfoJSON описывает одну тренировку для JSON.
+type workoutInfoJSON struct {
+	DayNumber int    `json:"day_number"`
+	Date      string `json:"date"`
+	Exercises string `json:"exercises"`
+	Notes     string `json:"notes"`
 }
 
-// ProgramDetail — детали одной программы и прогресс (GET /programs/{id})
-func ProgramDetail(w http.ResponseWriter, r *http.Request) {
-    // 1) ID программы из URL
-    pid, err := strconv.Atoi(chi.URLParam(r, "id"))
-    if err != nil {
-        http.NotFound(w, r)
-        return
-    }
-    // 2) Достаем программу
-    prog, err := programService.GetProgramByID(pid)
-    if err != nil {
-        http.Error(w, "Программа не найдена", http.StatusNotFound)
-        return
-    }
+// programDetailJSON описывает подробную информацию о программе.
+type programDetailJSON struct {
+	ID          int               `json:"id"`
+	Title       string            `json:"title"`
+	Description string            `json:"description"`
+	Workouts    []workoutInfoJSON `json:"workouts"`
+}
 
-    // 3) Получаем userID из сессии/контекста
-    userIDVal := r.Context().Value(middleware.UserIDKey)
-    if userIDVal == nil {
-        http.Error(w, "Требуется авторизация", http.StatusUnauthorized)
-        return
-    }
-    userID := userIDVal.(int)
+// DashboardHandler возвращает JSON со списком программ для текущего пользователя.
+func DashboardHandler(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-    // 4) Загружаем прогресс
-    progresses, err := progressService.ListProgress(userID, pid)
-    if err != nil {
-        http.Error(w, "Не удалось загрузить прогресс", http.StatusInternalServerError)
-        return
-    }
-    completed := make(map[int]bool, len(progresses))
-    for _, p := range progresses {
-        completed[p.Day] = true
-    }
+	// Получаем все программы для пользователя (или все, если нет разделения)
+	programs, err := models.GetProgramsForUser(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "Ошибка при загрузке программ", http.StatusInternalServerError)
+		return
+	}
 
-    // 5) Рендерим шаблон
-    data := map[string]interface{}{
-        "Program":       prog,
-        "CompletedDays": completed,
-    }
-    t := template.Must(template.ParseFiles(
-        filepath.Join("internal", "templates", "base.html"),
-        filepath.Join("internal", "templates", "program_detail.html"),
-    ))
-    t.ExecuteTemplate(w, "base", data)
+	var resp []programSummaryJSON
+	for _, p := range programs {
+		resp = append(resp, programSummaryJSON{
+			ID:    p.ID,
+			Title: p.Name,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+// ProgramHandler возвращает JSON с деталями конкретной программы по ID.
+func ProgramHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	programID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid program ID", http.StatusBadRequest)
+		return
+	}
+
+	_, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Получаем программу
+	prog, err := models.GetProgramByID(r.Context(), programID)
+	if err != nil {
+		http.Error(w, "Программа не найдена", http.StatusNotFound)
+		return
+	}
+
+	// Получаем тренировки
+	workouts, err := models.GetWorkoutsByProgram(r.Context(), programID)
+	if err != nil {
+		http.Error(w, "Ошибка при получении тренировок", http.StatusInternalServerError)
+		return
+	}
+
+	var resp programDetailJSON
+	resp.ID = prog.ID
+	resp.Title = prog.Name
+	resp.Description = prog.Description
+
+	for _, wkt := range workouts {
+		resp.Workouts = append(resp.Workouts, workoutInfoJSON{
+			DayNumber: wkt.DayNumber,
+			Date:      wkt.Date.Format("2006-01-02"),
+			Exercises: wkt.Exercises,
+			Notes:     wkt.Notes,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }

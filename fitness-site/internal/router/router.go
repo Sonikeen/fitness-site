@@ -2,28 +2,19 @@ package router
 
 import (
 	"net/http"
+	"fitness-site/internal/handlers"
+	"fitness-site/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-
-	"fitness-site/internal/handlers"
-	"fitness-site/internal/middleware"
 )
 
-// SetupRouter настраивает все маршруты и возвращает http.Handler (Chi).
 func SetupRouter() http.Handler {
 	r := chi.NewRouter()
 
-	// Встроенные middleware Chi
-	r.Use(
-		chiMiddleware.RealIP,
-		chiMiddleware.Logger,
-		chiMiddleware.Recoverer,
-		// Если у тебя есть SessionMiddleware — добавь здесь:
-		// middleware.SessionMiddleware,
-	)
+	r.Use(chiMiddleware.RealIP, chiMiddleware.Logger, chiMiddleware.Recoverer)
 
-	// Статика (/static/* → папка static/)
+	// Статика
 	fileServer := http.FileServer(http.Dir("static"))
 	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 
@@ -31,31 +22,34 @@ func SetupRouter() http.Handler {
 	r.Get("/", handlers.HomePage)
 	r.Get("/services", handlers.ServicesPage)
 	r.Get("/about", handlers.AboutPage)
-	r.Get("/contact", handlers.ContactPage)
 
-	// Регистрация и вход
-	r.Get("/register", handlers.ShowRegister)
-	r.Post("/register", handlers.HandleRegister)
-	r.Get("/login", handlers.ShowLogin)
+	// Точка входа: Dashboard (покажет либо форму логина/регистрации, либо список программ)
+	r.Get("/dashboard", handlers.Dashboard)
+
+
+
+	// Логин / регистрация
 	r.Post("/login", handlers.HandleLogin)
+	r.Post("/register", handlers.HandleRegister)
+	r.Get("/logout", handlers.LogoutHandler)
 
-	// Выход — только для авторизованных
+	// Профиль (редактирование) — только для авторизованных
+	r.With(middleware.AuthMiddleware).Get("/profile", handlers.ProfileEditHandler)
 	r.With(middleware.AuthMiddleware).
-		Get("/logout", handlers.LogoutHandler)
-
-	// Личный кабинет (HTML)
-	r.With(middleware.AuthMiddleware).
-		Get("/dashboard", handlers.Dashboard)
-
-	// Работа с программами (JSON API, только для авторизованных)
-	r.Route("/programs", func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware)
-		r.Get("/", handlers.DashboardHandler)           // GET  /programs
-		r.Get("/{id}", handlers.ProgramHandler)         // GET  /programs/{id}
-		r.Post("/{id}/progress", handlers.TrackProgress) // POST /programs/{id}/progress
+Route("/profile/edit", func(r chi.Router) {
+		r.Get("/", handlers.ProfileEditHandler)
+		r.Post("/", handlers.ProfileEditHandler)
 	})
 
-	// Тренировки (in-memory)
+	// программы и прогресс (только для авторизованных)
+	r.Route("/programs", func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware)
+		r.Get("/", handlers.Dashboard)             // список программ
+		r.Get("/{id}", handlers.ProgramPageHandler) // детали программы
+		r.Post("/{id}/progress", handlers.TrackProgress)
+	})
+
+	// тренировки (публичные)
 	r.Get("/workouts", handlers.WorkoutListHandler)
 	r.Get("/workouts/new", handlers.WorkoutCreateHandler)
 	r.Post("/workouts/new", handlers.WorkoutCreateHandler)

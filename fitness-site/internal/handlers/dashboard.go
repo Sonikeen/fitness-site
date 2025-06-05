@@ -1,6 +1,4 @@
-// internal/handlers/dashboard.go
 package handlers
-
 import (
 	"html/template"
 	"log"
@@ -10,21 +8,17 @@ import (
 	"fitness-site/internal/middleware"
 	"fitness-site/internal/models"
 )
-
 type DashboardItem struct {
 	Program   models.Program
 	Completed int
 	Total     int
 }
-
 type UserStats struct {
 	TotalCompletedDays int
 	TotalStarted       int
 	TotalFinished      int
-	AvgProgress        int // %
+	AvgProgress        int 
 }
-
-// DashboardData теперь содержит IsLoggedIn и IsAdmin
 type DashboardData struct {
 	ActiveTab  string
 	Error      string
@@ -33,9 +27,7 @@ type DashboardData struct {
 	IsLoggedIn bool
 	IsAdmin    bool
 }
-
 func Dashboard(w http.ResponseWriter, r *http.Request) {
-	// Парсим шаблоны
 	basePath := filepath.Join("internal", "templates", "base.html")
 	dashPath := filepath.Join("internal", "templates", "dashboard.html")
 	t, err := template.ParseFiles(basePath, dashPath)
@@ -44,11 +36,8 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка серверного шаблона", http.StatusInternalServerError)
 		return
 	}
-
-	// Проверяем, залогинен ли пользователь
 	user, ok := middleware.GetUser(r)
 	if !ok {
-		// Не залогинен — показываем форму логина/регистрации
 		active := "login"
 		if r.URL.Query().Get("tab") == "register" {
 			active = "register"
@@ -64,15 +53,12 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		t.ExecuteTemplate(w, "base", data)
 		return
 	}
-
-	// Пользователь залогинен. Собираем список программ и прогресс
 	userID := user.ID
 	progs, err := ProgramService.GetAllPrograms(r.Context())
 	if err != nil {
 		http.Error(w, "Ошибка получения программ", http.StatusInternalServerError)
 		return
 	}
-
 	var items []DashboardItem
 	for _, p := range progs {
 		doneList, err := ProgressService.ListProgress(r.Context(), userID, p.ID)
@@ -90,8 +76,6 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 			Total:     len(p.Days),
 		})
 	}
-
-	// Считаем статистику
 	var statDays, started, finished, sumPercent int
 	for _, it := range items {
 		if it.Completed > 0 {
@@ -115,8 +99,6 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		TotalFinished:      finished,
 		AvgProgress:        avg,
 	}
-
-	// Формируем данные для шаблона
 	data := DashboardData{
 		ActiveTab:  "",
 		Error:      "",
@@ -125,6 +107,5 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		IsLoggedIn: true,
 		IsAdmin:    user.IsAdmin, // передаём, является ли пользователь админом
 	}
-
 	t.ExecuteTemplate(w, "base", data)
 }

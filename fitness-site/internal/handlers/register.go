@@ -4,7 +4,7 @@ import (
     "net/http"
 )
 
-// RegisterHandlers — если нужен отдельный обработчик (обычно не нужен)
+// RegisterHandlers — если нужен отдельный обработчик 
 func RegisterHandlers(w http.ResponseWriter, r *http.Request) {
     switch r.Method {
     case http.MethodGet:

@@ -12,6 +12,7 @@ type User struct {
 	Name         string
 	Email        string
 	PasswordHash string
+	IsAdmin      bool
 
 	Age       sql.NullInt64
 	HeightCM  sql.NullInt64
@@ -22,47 +23,16 @@ type User struct {
 
 var ErrUserNotFound = errors.New("user not found")
 
-// GetByEmail читает пользователя без created_at/updated_at:
+// Обратите внимание: методы GetByID/GetByEmail больше не нужны для AuthMiddleware.
+// Их можно оставить на случай, если где-то ещё используется хранилище,
+// но в контексте авторизации мы не вызываем их больше.
 func GetByEmail(ctx context.Context, email string) (*User, error) {
-	row := DB.QueryRowContext(ctx, `
-SELECT id, username, email, password_hash,
-       age, height_cm, weight_kg, goals, avatar_url
-  FROM users WHERE email=$1`, email)
-
-	var u User
-	if err := row.Scan(
-		&u.ID, &u.Name, &u.Email, &u.PasswordHash,
-		&u.Age, &u.HeightCM, &u.WeightKG, &u.Goals, &u.AvatarURL,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-	return &u, nil
+	return nil, nil
 }
-
-// GetByID без created_at/updated_at:
 func GetByID(ctx context.Context, id int) (*User, error) {
-	row := DB.QueryRowContext(ctx, `
-SELECT id, username, email, password_hash,
-       age, height_cm, weight_kg, goals, avatar_url
-  FROM users WHERE id=$1`, id)
-
-	var u User
-	if err := row.Scan(
-		&u.ID, &u.Name, &u.Email, &u.PasswordHash,
-		&u.Age, &u.HeightCM, &u.WeightKG, &u.Goals, &u.AvatarURL,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-	return &u, nil
+	return nil, ErrUserNotFound
 }
 
-// UpdateProfile обновляет поля без updated_at:
 func UpdateProfile(ctx context.Context, u *User) error {
 	_, err := DB.ExecContext(ctx, `
 UPDATE users SET

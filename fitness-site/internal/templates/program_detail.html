@@ -31,7 +31,7 @@
     {{ end }}
 
     <p style="margin-top:1.5rem;">
-        <a href="/dashboard" class="btn btn--secondary">← Назад к списку программ</a>
+        <a href="/programs"  class="btn btn--secondary">← Назад к списку программ</a>
     </p>
 </section>
 
@@ -45,7 +45,10 @@
                 const resp = await fetch('/programs/' + programID + '/progress', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ "day": day })
+                    body: new URLSearchParams({
+                        day: day,
+                        checked: cb.checked ? 'true' : 'false'
+                    })
                 });
                 if (!resp.ok) throw new Error('Ошибка сохранения');
             } catch (e) {
@@ -55,4 +58,5 @@
         });
     });
 </script>
+
 {{ end }}

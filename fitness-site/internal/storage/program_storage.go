@@ -1,31 +1,23 @@
-// internal/storage/program_storage.go
 package storage
-
 import (
 	"context"
 	"fmt"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 	"fitness-site/internal/models"
 )
-
-// ProgramStorage описывает операции с таблицей programs и их днями (days).
 type ProgramStorage interface {
 	GetAllPrograms(ctx context.Context) ([]models.Program, error)
 	GetByID(ctx context.Context, id int) (*models.Program, error)
+	Create(ctx context.Context, p *models.Program) error
+	Update(ctx context.Context, p *models.Program) error
+	Delete(ctx context.Context, id int) error
 }
-
-// ProgramPGStorage — реализация ProgramStorage через pgxpool.Pool.
 type ProgramPGStorage struct {
 	pool *pgxpool.Pool
 }
-
-// NewProgramStorage создаёт новое хранилище программ.
 func NewProgramStorage(pool *pgxpool.Pool) *ProgramPGStorage {
 	return &ProgramPGStorage{pool: pool}
 }
-
-// GetAllPrograms возвращает все программы (без деталей по дням).
 func (s *ProgramPGStorage) GetAllPrograms(ctx context.Context) ([]models.Program, error) {
 	rows, err := s.pool.Query(ctx,
 		`SELECT id, name, description
@@ -35,14 +27,12 @@ func (s *ProgramPGStorage) GetAllPrograms(ctx context.Context) ([]models.Program
 		return nil, fmt.Errorf("GetAllPrograms: %w", err)
 	}
 	defer rows.Close()
-
 	var result []models.Program
 	for rows.Next() {
 		var p models.Program
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description); err != nil {
 			return nil, fmt.Errorf("GetAllPrograms.Scan: %w", err)
 		}
-		// Поле Days оставляем пустым — подробности подтянем только при GetByID
 		result = append(result, p)
 	}
 	if rows.Err() != nil {
@@ -50,22 +40,14 @@ func (s *ProgramPGStorage) GetAllPrograms(ctx context.Context) ([]models.Program
 	}
 	return result, nil
 }
-
-// GetByID возвращает одну программу по её ID, включая массив строк DayDescriptions.
-// Использует таблицу `days` для получения описаний: (program_id, day_number, description).
-func (s *ProgramPGStorage) GetByID(ctx context.Context, id int) (*models.Program, error) {
-	// 1) Сначала читаем базовые поля программы: id, name, description.
-	row := s.pool.QueryRow(ctx,
+func (s *ProgramPGStorage) GetByID(ctx context.Context, id int) (*models.Program, error) {	row := s.pool.QueryRow(ctx,
 		`SELECT id, name, description
          FROM programs
          WHERE id = $1`, id)
-
 	var p models.Program
 	if err := row.Scan(&p.ID, &p.Name, &p.Description); err != nil {
 		return nil, fmt.Errorf("GetByID.Scan: %w", err)
 	}
-
-	// 2) Теперь читаем все строки из таблицы `days` для этой программы:
 	dayRows, err := s.pool.Query(ctx,
 		`SELECT day_number, description
          FROM days
@@ -75,7 +57,6 @@ func (s *ProgramPGStorage) GetByID(ctx context.Context, id int) (*models.Program
 		return nil, fmt.Errorf("GetByID.DaysQuery: %w", err)
 	}
 	defer dayRows.Close()
-
 	var days []string
 	for dayRows.Next() {
 		var dayNum int
@@ -88,7 +69,73 @@ func (s *ProgramPGStorage) GetByID(ctx context.Context, id int) (*models.Program
 	if dayRows.Err() != nil {
 		return nil, fmt.Errorf("GetByID.DaysRows.Err: %w", dayRows.Err())
 	}
-
 	p.Days = days
 	return &p, nil
+}
+func (s *ProgramPGStorage) Create(ctx context.Context, p *models.Program) error {
+	var newID int
+	err := s.pool.QueryRow(ctx,
+		`INSERT INTO programs (name, description)
+         VALUES ($1, $2)
+         RETURNING id`, p.Name, p.Description).Scan(&newID)
+	if err != nil {
+		return fmt.Errorf("Create.ProgramInsert: %w", err)
+	}
+	for i, desc := range p.Days {
+		dayNum := i + 1
+		_, err := s.pool.Exec(ctx,
+			`INSERT INTO days (program_id, day_number, description)
+             VALUES ($1, $2, $3)`,
+			newID, dayNum, desc,
+		)
+		if err != nil {
+			return fmt.Errorf("Create.DaysInsert: %w", err)
+		}
+	}
+	return nil
+}
+func (s *ProgramPGStorage) Update(ctx context.Context, p *models.Program) error {
+	_, err := s.pool.Exec(ctx,
+		`UPDATE programs
+         SET name = $1,
+             description = $2
+         WHERE id = $3`,
+		p.Name, p.Description, p.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("Update.ProgramUpdate: %w", err)
+	}
+	_, err = s.pool.Exec(ctx,
+		`DELETE FROM days
+         WHERE program_id = $1`, p.ID)
+	if err != nil {
+		return fmt.Errorf("Update.DaysDelete: %w", err)
+	}
+	for i, desc := range p.Days {
+		dayNum := i + 1
+		_, err := s.pool.Exec(ctx,
+			`INSERT INTO days (program_id, day_number, description)
+             VALUES ($1, $2, $3)`,
+			p.ID, dayNum, desc,
+		)
+		if err != nil {
+			return fmt.Errorf("Update.DaysInsert: %w", err)
+		}
+	}
+	return nil
+}
+func (s *ProgramPGStorage) Delete(ctx context.Context, id int) error {
+	_, err := s.pool.Exec(ctx,
+		`DELETE FROM days
+         WHERE program_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("Delete.Days: %w", err)
+	}
+	_, err = s.pool.Exec(ctx,
+		`DELETE FROM programs
+         WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("Delete.Programs: %w", err)
+	}
+	return nil
 }

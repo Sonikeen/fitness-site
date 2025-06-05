@@ -18,7 +18,6 @@ var ErrProgramNotFound = errors.New("program not found")
 
 // В этой версии мы загружаем программы через ProgramStorage, поэтому
 // GetAllPrograms и GetProgramByID из этого файла не используются напрямую.
-// Но если вам нужны заглушки — оставьте их или удалите, как вам удобнее.
 
 func GetAllPrograms(ctx context.Context) ([]Program, error) {
 	return nil, nil

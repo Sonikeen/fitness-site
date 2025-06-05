@@ -1,23 +1,19 @@
 package handlers
-
 import (
 	"fmt"
 	"html/template"
 	"net/http"
 	"path/filepath"
 	"strings"
-
 	"fitness-site/internal/middleware"
 	"fitness-site/internal/models"
 	"github.com/jackc/pgx/v5/pgconn"
 )
-
 func loadAuthTemplates(child string) (*template.Template, error) {
 	basePath := filepath.Join("internal", "templates", "base.html")
 	childPath := filepath.Join("internal", "templates", child)
 	return template.ParseFiles(basePath, childPath)
 }
-
 func renderAuthError(w http.ResponseWriter, activeTab, message string) {
 	tmpl, err := loadAuthTemplates("dashboard.html")
 	if err != nil {
@@ -31,7 +27,6 @@ func renderAuthError(w http.ResponseWriter, activeTab, message string) {
 	}
 	tmpl.ExecuteTemplate(w, "base", data)
 }
-
 func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		renderAuthError(w, "register", "Неверные данные формы")
@@ -41,7 +36,6 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	email := strings.TrimSpace(r.FormValue("email"))
 	pass := strings.TrimSpace(r.FormValue("password"))
 	confirm := strings.TrimSpace(r.FormValue("confirm"))
-
 	if username == "" || email == "" || pass == "" || confirm == "" || pass != confirm {
 		renderAuthError(w, "register", "Пожалуйста, заполните все поля корректно и подтвердите пароль")
 		return
@@ -85,7 +79,6 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/programs", http.StatusSeeOther)
 
 }
-
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		renderAuthError(w, "login", "Неверные данные")
@@ -93,7 +86,6 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	email := strings.TrimSpace(r.FormValue("email"))
 	pass := strings.TrimSpace(r.FormValue("password"))
-
 	fmt.Printf("Попытка логина: email=%q\n", email)
 	user, err := UserService.Authenticate(r.Context(), email, pass)
 	if err != nil {
@@ -116,7 +108,6 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/programs", http.StatusSeeOther)
 
 }
-
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err == nil {

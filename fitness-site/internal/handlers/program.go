@@ -1,5 +1,4 @@
 package handlers
-
 import (
 	"encoding/json"
 	"html/template"

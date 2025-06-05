@@ -1,11 +1,12 @@
+// internal/handlers/dashboard.go
 package handlers
 
 import (
 	"html/template"
 	"log"
 	"net/http"
-	
 	"path/filepath"
+
 	"fitness-site/internal/middleware"
 	"fitness-site/internal/models"
 )
@@ -23,16 +24,18 @@ type UserStats struct {
 	AvgProgress        int // %
 }
 
+// DashboardData теперь содержит IsLoggedIn и IsAdmin
 type DashboardData struct {
-	ActiveTab string
-	Error     string
-	Items     []DashboardItem
-	Stats     *UserStats // новое поле для статистики
+	ActiveTab  string
+	Error      string
+	Items      []DashboardItem
+	Stats      *UserStats
+	IsLoggedIn bool
+	IsAdmin    bool
 }
 
 func Dashboard(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
-
+	// Парсим шаблоны
 	basePath := filepath.Join("internal", "templates", "base.html")
 	dashPath := filepath.Join("internal", "templates", "dashboard.html")
 	t, err := template.ParseFiles(basePath, dashPath)
@@ -42,22 +45,28 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Проверяем, залогинен ли пользователь
+	user, ok := middleware.GetUser(r)
 	if !ok {
+		// Не залогинен — показываем форму логина/регистрации
 		active := "login"
 		if r.URL.Query().Get("tab") == "register" {
 			active = "register"
 		}
-		data := map[string]interface{}{
-			"ActiveTab":  active,
-			"Error":      "",
-			"Items":      nil,
-			"Stats":      nil,
-			"IsLoggedIn": false,
+		data := DashboardData{
+			ActiveTab:  active,
+			Error:      "",
+			Items:      nil,
+			Stats:      nil,
+			IsLoggedIn: false,
+			IsAdmin:    false,
 		}
 		t.ExecuteTemplate(w, "base", data)
 		return
 	}
 
+	// Пользователь залогинен. Собираем список программ и прогресс
+	userID := user.ID
 	progs, err := ProgramService.GetAllPrograms(r.Context())
 	if err != nil {
 		http.Error(w, "Ошибка получения программ", http.StatusInternalServerError)
@@ -82,6 +91,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// Считаем статистику
 	var statDays, started, finished, sumPercent int
 	for _, it := range items {
 		if it.Completed > 0 {
@@ -99,19 +109,22 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	if len(items) > 0 {
 		avg = sumPercent / len(items)
 	}
-	stats := UserStats{
+	stats := &UserStats{
 		TotalCompletedDays: statDays,
 		TotalStarted:       started,
 		TotalFinished:      finished,
 		AvgProgress:        avg,
 	}
 
-	data := map[string]interface{}{
-		"ActiveTab":  "",
-		"Error":      "",
-		"Items":      items,
-		"Stats":      &stats,
-		"IsLoggedIn": true,
+	// Формируем данные для шаблона
+	data := DashboardData{
+		ActiveTab:  "",
+		Error:      "",
+		Items:      items,
+		Stats:      stats,
+		IsLoggedIn: true,
+		IsAdmin:    user.IsAdmin, // передаём, является ли пользователь админом
 	}
+
 	t.ExecuteTemplate(w, "base", data)
 }

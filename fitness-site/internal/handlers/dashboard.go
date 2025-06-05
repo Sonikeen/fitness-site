@@ -1,62 +1,117 @@
 package handlers
 
 import (
-    "html/template"
-    "log"
-    "net/http"
-    "path/filepath"
-
-    "fitness-site/internal/middleware"
-    "fitness-site/internal/models"
+	"html/template"
+	"log"
+	"net/http"
+	
+	"path/filepath"
+	"fitness-site/internal/middleware"
+	"fitness-site/internal/models"
 )
 
-// DashboardItem описывает одну строку в личном кабинете.
 type DashboardItem struct {
-    Program   models.Program
-    Completed int
-    Total     int
+	Program   models.Program
+	Completed int
+	Total     int
+}
+
+type UserStats struct {
+	TotalCompletedDays int
+	TotalStarted       int
+	TotalFinished      int
+	AvgProgress        int // %
+}
+
+type DashboardData struct {
+	ActiveTab string
+	Error     string
+	Items     []DashboardItem
+	Stats     *UserStats // новое поле для статистики
 }
 
 func Dashboard(w http.ResponseWriter, r *http.Request) {
-    userID, ok := middleware.UserIDFromContext(r.Context())
-    if !ok {
-        http.Redirect(w, r, "/login", http.StatusSeeOther)
-        return
-    }
+	userID, ok := middleware.UserIDFromContext(r.Context())
 
-    // Все программы
-    progs, err := ProgramService.GetAllPrograms(r.Context())
+	basePath := filepath.Join("internal", "templates", "base.html")
+	dashPath := filepath.Join("internal", "templates", "dashboard.html")
+	t, err := template.ParseFiles(basePath, dashPath)
+	if err != nil {
+		log.Printf("Dashboard.Handler: ошибка при ParseFiles: %v", err)
+		http.Error(w, "Ошибка серверного шаблона", http.StatusInternalServerError)
+		return
+	}
 
-    if err != nil {
-        http.Error(w, "Ошибка получения программ", http.StatusInternalServerError)
-        return
-    }
+	if !ok {
+		active := "login"
+		if r.URL.Query().Get("tab") == "register" {
+			active = "register"
+		}
+		data := map[string]interface{}{
+			"ActiveTab":  active,
+			"Error":      "",
+			"Items":      nil,
+			"Stats":      nil,
+			"IsLoggedIn": false,
+		}
+		t.ExecuteTemplate(w, "base", data)
+		return
+	}
 
-    // Для каждой программы считаем сколько дней выполнено
-    var items []DashboardItem
-    for _, p := range progs {
-        done, err := ProgressService.ListProgress(r.Context(), userID, p.ID)
+	progs, err := ProgramService.GetAllPrograms(r.Context())
+	if err != nil {
+		http.Error(w, "Ошибка получения программ", http.StatusInternalServerError)
+		return
+	}
 
-        if err != nil {
-            http.Error(w, "Ошибка загрузки прогресса", http.StatusInternalServerError)
-            return
-        }
-        // p.Days должен быть []string!
-        items = append(items, DashboardItem{
-            Program:   p,
-            Completed: len(done),
-            Total:     len(p.Days),
-        })
-    }
+	var items []DashboardItem
+	for _, p := range progs {
+		doneList, err := ProgressService.ListProgress(r.Context(), userID, p.ID)
+		if err != nil {
+			http.Error(w, "Ошибка загрузки прогресса", http.StatusInternalServerError)
+			return
+		}
+		doneSet := make(map[int]struct{})
+		for _, pr := range doneList {
+			doneSet[pr.DayNumber] = struct{}{}
+		}
+		items = append(items, DashboardItem{
+			Program:   p,
+			Completed: len(doneSet),
+			Total:     len(p.Days),
+		})
+	}
 
-    // Рендерим шаблон
-    data := map[string]interface{}{"Items": items}
-    t := template.Must(template.ParseFiles(
-        filepath.Join("internal", "templates", "base.html"),
-        filepath.Join("internal", "templates", "dashboard.html"),
-    ))
-    if err := t.ExecuteTemplate(w, "base", data); err != nil {
-        log.Printf("Dashboard: ошибка при выполнении шаблона: %v", err)
-        http.Error(w, "Ошибка серверного рендеринга", http.StatusInternalServerError)
-    }
+	var statDays, started, finished, sumPercent int
+	for _, it := range items {
+		if it.Completed > 0 {
+			started++
+		}
+		if it.Total > 0 && it.Completed == it.Total {
+			finished++
+		}
+		statDays += it.Completed
+		if it.Total > 0 {
+			sumPercent += it.Completed * 100 / it.Total
+		}
+	}
+	avg := 0
+	if len(items) > 0 {
+		avg = sumPercent / len(items)
+	}
+	stats := UserStats{
+		TotalCompletedDays: statDays,
+		TotalStarted:       started,
+		TotalFinished:      finished,
+		AvgProgress:        avg,
+	}
+
+	data := map[string]interface{}{
+		"ActiveTab":  "",
+		"Error":      "",
+		"Items":      items,
+		"Stats":      &stats,
+		"IsLoggedIn": true,
+	}
+	t.ExecuteTemplate(w, "base", data)
 }

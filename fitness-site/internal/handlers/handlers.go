@@ -26,6 +26,4 @@ func AboutPage(w http.ResponseWriter, r *http.Request) {
     render(w, "about.html", map[string]interface{}{"Title": "О нас"})
 }
 
-func ContactPage(w http.ResponseWriter, r *http.Request) {
-    render(w, "contact.html", map[string]interface{}{"Title": "Контакты"})
-}
+

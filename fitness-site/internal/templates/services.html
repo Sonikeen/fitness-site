@@ -1,12 +1,22 @@
-{{ define "title" }}Тренировки — FitPro{{ end }}
+{{ define "title" }}Услуги — FitPro{{ end }}
 
 {{ define "content" }}
-<h1>Наши тренировки</h1>
-<ul>
-    <li>IIT — интенсивные интервальные тренировки</li>
-    <li>Силовой тренинг</li>
-    <li>Йога и растяжка</li>
-    <li>Кардио-программы</li>
-</ul>
-<p>Все тренировки доступны в формате видеоуроков и индивидуальных онлайн-сессий.</p>
+<section class="services container">
+    <h1>Наша платформа</h1>
+    <p>Выберите одну из готовых программ и начните тренировки:</p>
+    <ul class="program-list">
+        {{ range .Programs }}
+        <li class="program-item">
+            <h2>{{ .Name }}</h2>
+            <p>{{ .Description }}</p>
+            {{ if $.LoggedIn }}
+            <a href="/programs/{{ .ID }}" class="btn btn--primary">Начать</a>
+            {{ else }}
+            <!-- Сюда перенаправляем на /dashboard?tab=login -->
+            <a href="/dashboard?tab=login" class="btn btn--secondary">Войти, чтобы начать</a>
+            {{ end }}
+        </li>
+        {{ end }}
+    </ul>
+</section>
 {{ end }}

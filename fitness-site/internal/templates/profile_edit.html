@@ -1,0 +1,51 @@
+{{ define "title" }}Редактировать профиль — FitPro{{ end }}
+
+{{ define "content" }}
+<section class="profile-edit container">
+    <header class="profile__header" style="margin-bottom: 2rem;">
+        <h1 class="page-title" style="font-size: 2rem; margin-bottom: 0.25rem;">Ваш профиль</h1>
+        <p class="page-subtitle" style="color: #666; font-size: 1rem;">
+            Здесь вы можете изменить личные данные
+        </p>
+    </header>
+
+    {{ if .Error }}
+    <div class="error" style="color:#c00;margin-bottom:1rem;">{{ .Error }}</div>
+    {{ end }}
+
+    <form action="/profile/edit" method="post" class="profile-form" style="max-width: 500px;">
+        <div class="form-group">
+            <label for="username">Имя:</label>
+            <input type="text" id="username" name="username" value="{{ .User.Name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="age">Возраст:</label>
+            <input type="number" id="age" name="age" min="0"
+                value="{{ if .User.Age.Valid }}{{ .User.Age.Int64 }}{{ end }}">
+        </div>
+        <div class="form-group">
+            <label for="height_cm">Рост (см):</label>
+            <input type="number" id="height_cm" name="height_cm" min="0"
+                value="{{ if .User.HeightCM.Valid }}{{ .User.HeightCM.Int64 }}{{ end }}">
+        </div>
+        <div class="form-group">
+            <label for="weight_kg">Вес (кг):</label>
+            <input type="number" step="0.1" id="weight_kg" name="weight_kg" min="0"
+                value="{{ if .User.WeightKG.Valid }}{{ .User.WeightKG.Float64 }}{{ end }}">
+        </div>
+        <div class="form-group">
+            <label for="goals">Цели:</label>
+            <textarea id="goals" name="goals"
+                rows="3">{{ if .User.Goals.Valid }}{{ .User.Goals.String }}{{ end }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="avatar_url">URL аватара:</label>
+            <input type="text" id="avatar_url" name="avatar_url"
+                value="{{ if .User.AvatarURL.Valid }}{{ .User.AvatarURL.String }}{{ end }}">
+            <small>/static/uploads/avatars/имя.png</small>
+        </div>
+        <button type="submit" class="cta-button">Сохранить</button>
+        <a href="/profile" class="btn btn--secondary" style="margin-left:1rem;">Отмена</a>
+    </form>
+</section>
+{{ end }}

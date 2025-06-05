@@ -1,0 +1,16 @@
+{{ define "title" }}Профиль — FitPro{{ end }}
+
+{{ define "content" }}
+<section class="profile container">
+    <h1>Профиль пользователя</h1>
+    <form action="/profile" method="post">
+        <label>Имя: <input type="text" name="username" value="{{ .User.Name }}" required></label><br>
+        <label>Возраст: <input type="number" name="age" value="{{ .User.Age.Int64 }}"></label><br>
+        <label>Рост (см): <input type="number" name="height" value="{{ .User.HeightCM.Int64 }}"></label><br>
+        <label>Вес (кг): <input type="text" name="weight" value="{{ .User.WeightKG.Float64 }}"></label><br>
+        <label>Цели: <input type="text" name="goals" value="{{ .User.Goals.String }}"></label><br>
+        <button type="submit">Сохранить</button>
+    </form>
+    <a href="/dashboard">← Назад</a>
+</section>
+{{ end }}

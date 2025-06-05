@@ -1,0 +1,113 @@
+{{ define "title" }}Личный кабинет — FitPro{{ end }}
+{{ define "content" }}
+<section class="dashboard container">
+    {{ if not .Items }}
+    <div class="auth-section">
+        <div class="form-container" style="max-width: 400px; margin: 0 auto;">
+            <div class="form-toggle" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                <button id="show-register" class="{{ if eq .ActiveTab `register` }}active{{ end }}">Регистрация</button>
+                <button id="show-login" class="{{ if eq .ActiveTab `login` }}active{{ end }}">Вход</button>
+            </div>
+            {{ if .Error }}
+            <div class="error" style="color: #c00; margin-bottom: 1rem;">
+                {{ .Error }}
+            </div>
+            {{ end }}
+            <form id="register-form" action="/register" method="post"
+                style="display: {{ if eq .ActiveTab `register` }}block{{ else }}none{{ end }};">
+                <h2>Регистрация</h2>
+            
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="confirm">Подтвердите пароль</label>
+                    <input type="password" id="confirm" name="confirm" required>
+                </div>
+            
+                <button type="submit" class="cta-button">Зарегистрироваться</button>
+            </form>
+
+
+
+            <form id="login-form" action="/login" method="post"
+                style="display: {{ if eq .ActiveTab `login` }}block{{ else }}none{{ end }};">
+                <h2>Вход</h2>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Пароль</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                <button type="submit" class="cta-button">Войти</button>
+            </form>
+            {{ if .IsLoggedIn }}
+            <a href="/logout" class="btn btn--secondary" style="margin-top: 2rem; display: inline-block;">
+                Выйти из аккаунта
+            </a>
+            {{ end }}
+        </div>
+    </div>
+    <script>
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const registerForm = document.getElementById('register-form');
+        const loginForm = document.getElementById('login-form');
+        showRegisterBtn.addEventListener('click', () => {
+            registerForm.style.display = 'block';
+            loginForm.style.display = 'none';
+            showRegisterBtn.classList.add('active');
+            showLoginBtn.classList.remove('active');
+        });
+        showLoginBtn.addEventListener('click', () => {
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            showLoginBtn.classList.add('active');
+            showRegisterBtn.classList.remove('active');
+        });
+    </script>
+    {{ else }}
+    <h1 class="dashboard__heading">Личный кабинет</h1>
+
+    <a href="/logout" class="btn btn--secondary" style="margin-bottom: 1.5rem; display: inline-block;">
+        Выйти из аккаунта
+    </a>
+    <table class="dashboard__table">
+        <thead>
+            <tr>
+                <th>Программа</th>
+                <th>Прогресс</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .Items }}
+            <tr>
+                <td>{{ .Program.Name }}</td>
+                <td>{{ .Completed }} / {{ .Total }}</td>
+                <td>
+                    <a href="/programs/{{ .Program.ID }}" class="btn btn--primary">
+                        Перейти
+                    </a>
+                </td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+    {{ end }}
+</section>
+{{ end }}

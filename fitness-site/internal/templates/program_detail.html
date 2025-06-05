@@ -1,0 +1,58 @@
+{{ define "title" }}Программа «{{ .Program.Name }}» — FitPro{{ end }}
+
+{{ define "content" }}
+<section class="program-detail container" data-program-id="{{ .Program.ID }}">
+    <h1 class="program-detail__heading">Программа: «{{ .Program.Name }}»</h1>
+    <p class="program-detail__description">{{ .Program.Description }}</p>
+
+    {{ if .Program.Days }}
+    <ul class="program-detail__list">
+        {{ range $i, $dayDesc := .Program.Days }}
+        {{ $dayNum := add $i 1 }}
+        <li class="program-detail__day-item">
+            <div class="day-header">
+                <strong>День {{ $dayNum }}</strong>
+            </div>
+            <div class="day-body">
+                <p>{{ $dayDesc }}</p>
+            </div>
+            <div class="day-footer">
+                <label>
+                    <input type="checkbox" class="day-checkbox" data-day="{{ $dayNum }}" {{ if index $.CompletedDays
+                        $dayNum }}checked{{ end }}>
+                    Выполнено
+                </label>
+            </div>
+        </li>
+        {{ end }}
+    </ul>
+    {{ else }}
+    <p>Для этой программы ещё не добавлены дни.</p>
+    {{ end }}
+
+    <p style="margin-top:1.5rem;">
+        <a href="/dashboard" class="btn btn--secondary">← Назад к списку программ</a>
+    </p>
+</section>
+
+<script>
+    document.querySelectorAll('.day-checkbox').forEach(function (cb) {
+        cb.addEventListener('change', async function () {
+            const day = cb.dataset.day;
+            const programID = document.querySelector('.program-detail').dataset.programId;
+
+            try {
+                const resp = await fetch('/programs/' + programID + '/progress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ "day": day })
+                });
+                if (!resp.ok) throw new Error('Ошибка сохранения');
+            } catch (e) {
+                alert('Не удалось сохранить прогресс');
+                cb.checked = !cb.checked;
+            }
+        });
+    });
+</script>
+{{ end }}

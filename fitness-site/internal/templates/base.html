@@ -1,29 +1,31 @@
+{{ define "base" }}
 <!DOCTYPE html>
 <html lang="ru">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ block "title" . }}FitPro{{ end }}</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 
 <body>
-    <header>
-        <nav>
+    <header class="site-header">
+        <nav class="site-nav">
             <a href="/">Главная</a> |
+            <a href="/services">Услуги</a> |
             <a href="/about">О нас</a> |
-            <a href="/services">Тренировки</a> |
-            <a href="/contact">Контакты</a>
+            <a href="/profile">Профиль</a> |
+            <a href="/dashboard">Личный кабинет</a>
         </nav>
     </header>
-
-    <main>
+    <main class="site-main">
         {{ block "content" . }}{{ end }}
     </main>
-
-    <footer>
-        <p>&copy; 2025 FitPro. Все права защищены.</p>
+    <footer class="site-footer">
+        <p>© FitPro. Все права защищены.</p>
     </footer>
 </body>
 
 </html>
+{{ end }}

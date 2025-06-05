@@ -17,7 +17,7 @@ func Register(name, email, password string) error {
 	user := model.User{
 		Name:     name,
 		Email:    email,
-		Password: password, // позже — хешировать!
+		Password: password, 
 	}
 
 	mockUsers = append(mockUsers, user)

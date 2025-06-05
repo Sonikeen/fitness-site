@@ -77,7 +77,6 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	})
 	http.Redirect(w, r, "/programs", http.StatusSeeOther)
-
 }
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
@@ -106,7 +105,6 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode, 
 	})
 	http.Redirect(w, r, "/programs", http.StatusSeeOther)
-
 }
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")

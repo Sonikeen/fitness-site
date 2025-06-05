@@ -1,11 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
+/* Базовые стили страницы  */
 body {
     font-family: 'Inter', sans-serif;
     background-color: #f4f4f4;
@@ -15,17 +14,16 @@ body {
     display: flex;
     flex-direction: column;
 }
-
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
 }
-
 /* HEADER */
 header {
     background: linear-gradient(135deg, rgba(230, 230, 230, 0.9), rgba(240, 240, 240, 0.8));
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 10px 60px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
@@ -36,54 +34,57 @@ header {
     top: 0;
     z-index: 100;
     border-radius: 0 0 16px 16px;
+    transition: background 0.3s ease;
 }
-
 header h1 {
     font-size: 2rem;
     font-weight: 700;
     text-transform: uppercase;
     color: #131313;
+    letter-spacing: 1.2px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+/* Меню (Dropdown)  */
+.menu-wrapper {
+    position: relative;
 }
 
-/* Меню */
 .menu-toggle-area {
     position: relative;
     display: inline-block;
 }
-
 .menu-toggle {
     font-size: 1.9rem;
     cursor: pointer;
     color: #666;
+    transition: color 0.3s ease;
+    user-select: none;
     padding: 8px 14px;
     border-radius: 8px;
-    transition: color 0.3s ease;
 }
-
 .menu-toggle:hover {
     color: #000;
     background-color: rgba(0, 0, 0, 0.03);
 }
-
+.menu-toggle-area:hover .dropdown-menu {
+    display: flex;
+}
 .dropdown-menu {
     display: none;
     position: absolute;
     right: 0;
     top: 48px;
-    background: rgba(255, 255, 255, 0.9);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(245, 245, 245, 0.9));
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 12px;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
     min-width: 200px;
     padding: 10px 0;
     flex-direction: column;
     z-index: 999;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
-
-.menu-toggle-area:hover .dropdown-menu {
-    display: flex;
-}
-
 .dropdown-menu a {
     display: block;
     padding: 12px 24px;
@@ -92,198 +93,419 @@ header h1 {
     font-weight: 500;
     font-size: 0.95rem;
     text-transform: uppercase;
+    transition: background 0.2s ease, color 0.2s ease;
+    letter-spacing: 0.5px;
 }
-
 .dropdown-menu a:hover {
     background-color: rgba(0, 0, 0, 0.04);
     color: #000;
 }
-
-/* Ссылки навигации */
+/*  Навигационные ссылки  */
 nav a {
     margin-left: 40px;
     text-decoration: none;
     color: #555;
     font-weight: 500;
-    font-size: 1rem;
     text-transform: uppercase;
+    font-size: 1rem;
+    transition: color 0.3s ease;
 }
-
 nav a:hover {
     color: #000;
 }
-
-/* Кнопки */
-.cta-button,
-.btn {
-    display: inline-block;
-    padding: 14px;
-    font-weight: 600;
-    font-size: 1rem;
-    border-radius: 8px;
-    text-transform: uppercase;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.3s ease;
-}
-
-.cta-button {
-    background-color: #222;
-    color: #fff;
-    margin-top: 10px;
-}
-
-.cta-button:hover {
-    background-color: #000;
-    transform: translateY(-3px);
-}
-
-.btn--primary {
-    background-color: #333;
-    color: #fff;
-}
-
-.btn--primary:hover {
-    background-color: #222;
-}
-
-.btn--secondary {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-.btn--secondary:hover {
-    background-color: #e0e0e0;
-}
-
-/* AUTH section */
-.auth-section {
-    min-height: calc(100vh - 140px);
+/* HERO */
+.hero {
+    position: relative;
+    height: calc(100vh - 140px);
+    /* header + footer примерно */
+    width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 60px 20px;
-    background: linear-gradient(to right, #f7f7f7, #ececec);
+    text-align: center;
+    background-color: #111;
+    overflow: hidden;
+    animation: fadeIn 1.5s ease-out;
 }
-
-/* Form container */
-.form-container {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    padding: 40px 32px;
-    border-radius: 16px;
-    max-width: 480px;
-    width: 100%;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+.hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://images.unsplash.com/photo-1534258936925-c58bed479fcb?q=1000&auto=format&fit=crop&w=2000&h=1200');
+    background-size: cover;
+    background-position: center;
+    filter: grayscale(50%) brightness(70%) contrast(120%);
+    opacity: 0.5;
+    z-index: 1;
 }
-
-.form-toggle {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    color: #fff;
+    animation: fadeInUp 2s ease-out;
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+}
+.hero h2 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: transform 0.3s ease-in-out;
+}
+.hero h2:hover {
+    transform: translateY(-10px);
+}
+.hero p {
+    font-size: 1.2rem;
     margin-bottom: 30px;
+    line-height: 1.5;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    transition: opacity 0.3s ease;
 }
-
-.form-toggle button {
-    background: none;
-    border: none;
-    padding: 10px 20px;
-    font-weight: 600;
+.hero p:hover {
+    opacity: 0.8;
+}
+/*  Кнопка-CTA — стиль по умолчанию */
+.cta-button {
+    padding: 18px 36px;
+    background-color: #333;
+    color: #fff;
+    font-weight: 500;
     font-size: 1rem;
-    color: #666;
-    border-bottom: 2px solid transparent;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    display: inline-block;
+    margin-top: 30px;
     cursor: pointer;
 }
-
-.form-toggle button.active {
-    color: #111;
-    border-color: #333;
+.cta-button:hover {
+    background-color: #444;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
 }
-
-/* Form fields */
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-form h2 {
+/*  FOOTER */
+footer {
+    background-color: #111;
+    color: #999;
     text-align: center;
-    font-size: 1.9rem;
+    padding: 20px 0;
+    font-size: 0.9rem;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+}
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* Адаптив для HERO  */
+@media (max-width: 768px) {
+    .hero h2 {
+        font-size: 2.2rem;
+    }
+    .hero p {
+        font-size: 1rem;
+    }
+    .cta-button {
+        font-size: 1rem;
+        padding: 14px 30px;
+    }
+}
+/* «О нас» */
+.about-us {
+    background-color: #fff;
+    padding: 60px 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 1s ease-out;
+}
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeIn 1s ease-out;
+}
+.header h1 {
+    font-size: 2.8rem;
     font-weight: 700;
+    color: #111;
     margin-bottom: 10px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
 }
-
-form label {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #333;
-    margin-bottom: 6px;
-    display: block;
+.header p {
+    font-size: 1.2rem;
+    color: #666;
+    max-width: 800px;
+    margin: 0 auto;
 }
-
-form input,
-form textarea {
-    width: 100%;
-    padding: 14px 16px;
+.about-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 60px;
+    animation: fadeInUp 1.5s ease-out;
+}
+.block {
+    padding: 30px;
+    background-color: #f9f9f9;
     border-radius: 8px;
-    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+.block:hover {
+    transform: translateY(-10px);
+}
+.block h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+.block p {
     font-size: 1rem;
-    transition: border 0.3s ease;
+    color: #555;
+    line-height: 1.6;
 }
-
-form input:focus,
-form textarea:focus {
-    border-color: #999;
-    outline: none;
+/* Секция «Преимущества» */
+.benefits {
+    margin-bottom: 60px;
+    animation: fadeInUp 2s ease-out;
 }
-
-.form-group {
-    display: flex;
-    flex-direction: column;
+.benefits h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #111;
+    text-align: center;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+.benefit-item {
+    background-color: #f9f9f9;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease-in-out;
+}
+.benefit-item:hover {
+    transform: translateY(-10px);
+}
+.benefit-item h3 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+.benefit-item p {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.6;
+}
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 60px;
+    animation: fadeIn 2.5s ease-out;
+}
+.footer p {
+    font-size: 1.1rem;
+    color: #777;
+    max-width: 800px;
+    margin: 0 auto;
+}
+/* Таблица «Личный кабинет» */
+.dashboard__heading {
+    font-size: 2rem;
     margin-bottom: 1rem;
+    color: #222;
 }
-
-/* Таблица дашборда */
 .dashboard__table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 2rem;
 }
-
 .dashboard__table th,
 .dashboard__table td {
     border: 1px solid #ddd;
     padding: 0.75rem;
     text-align: left;
 }
-
 .dashboard__table th {
     background: #f0f0f0;
     font-weight: 600;
 }
-
 .dashboard__table tbody tr:hover {
     background: #fafafa;
 }
-
-/* Анимации */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+/*  Секция «Регистрация / Вход» */
+.auth-section {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to right, #f7f7f7, #ececec);
+    padding: 60px 20px;
 }
-
+.form-container {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 32px 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.8s ease-out;
+    box-sizing: border-box;
+}
+/* Переключатели «Регистрация / Вход» */
+.form-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.form-toggle button {
+    padding: 10px 20px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 1rem;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px 4px 0 0;
+}
+.form-toggle button.active {
+    color: #111;
+    border-color: #333;
+}
+/* Унифицированные стили внутри форм */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+form h2 {
+    text-align: center;
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #111;
+}
+/* Каждый “ряд” поля: метка + ввод */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.form-group label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #333;
+    margin-bottom: 2px;
+    text-align: left;
+}
+.form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+.form-group input:focus {
+    border-color: #999;
+    outline: none;
+}
+/* Сообщение об ошибке */
+.error {
+    color: #c00;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+/* === Кнопки: .cta-button, .btn === */
+.btn,
+.cta-button {
+    display: inline-block;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    text-decoration: none;
+}
+.btn:hover,
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+/* Primary-кнопка (“главная”) */
+.btn--primary {
+    background-color: #333;
+    color: #fff;
+}
+.btn--primary:hover {
+    background-color: #222;
+}
+/* Secondary-кнопка (пассивная) */
+.btn--secondary {
+    background-color: #f0f0f0;
+    color: #333;
+}
+.btn--secondary:hover {
+    background-color: #e0e0e0;
+}
+/* Кнопка “Отправить” в формах */
+.cta-button {
+    background-color: #222;
+    color: #fff;
+    margin-top: 8px;
+}
+.cta-button:hover {
+    background-color: #000;
+}
+/* === Кнопки “Переключатель” в формах (точечная обработка) === */
+.form-toggle button:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+/* === Анимации для всего остального === */
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);

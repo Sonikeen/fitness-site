@@ -1,4 +1,3 @@
-// internal/models/user.go
 package models
 
 import (
@@ -23,9 +22,6 @@ type User struct {
 
 var ErrUserNotFound = errors.New("user not found")
 
-// Обратите внимание: методы GetByID/GetByEmail больше не нужны для AuthMiddleware.
-// Их можно оставить на случай, если где-то ещё используется хранилище,
-// но в контексте авторизации мы не вызываем их больше.
 func GetByEmail(ctx context.Context, email string) (*User, error) {
 	return nil, nil
 }

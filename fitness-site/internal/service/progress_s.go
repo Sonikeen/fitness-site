@@ -8,6 +8,7 @@ import (
 // Интерфейс хранилища прогресса
 type ProgressStorage interface {
     Create(ctx context.Context, userID, programID, day int) error
+    Delete(ctx context.Context, userID, programID, day int) error
     List(ctx context.Context, userID, programID int) ([]models.Progress, error)
 }
 
@@ -16,17 +17,19 @@ type ProgressService struct {
     store ProgressStorage
 }
 
-// Конструктор ProgressService
+// Конструктор
 func NewProgressService(store ProgressStorage) *ProgressService {
     return &ProgressService{store: store}
 }
 
-// MarkCompleted отмечает день программы как завершённый
 func (s *ProgressService) MarkCompleted(ctx context.Context, userID, programID, day int) error {
     return s.store.Create(ctx, userID, programID, day)
 }
 
-// ListProgress возвращает весь прогресс пользователя по программе
+func (s *ProgressService) MarkIncomplete(ctx context.Context, userID, programID, day int) error {
+    return s.store.Delete(ctx, userID, programID, day)
+}
+
 func (s *ProgressService) ListProgress(ctx context.Context, userID, programID int) ([]models.Progress, error) {
     return s.store.List(ctx, userID, programID)
 }

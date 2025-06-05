@@ -1,4 +1,5 @@
 {{ define "title" }}Личный кабинет — FitPro{{ end }}
+
 {{ define "content" }}
 <section class="dashboard container">
     {{ if not .Items }}
@@ -16,31 +17,29 @@
             <form id="register-form" action="/register" method="post"
                 style="display: {{ if eq .ActiveTab `register` }}block{{ else }}none{{ end }};">
                 <h2>Регистрация</h2>
-            
+
                 <div class="form-group">
                     <label for="username">Имя пользователя</label>
                     <input type="text" id="username" name="username" required>
                 </div>
-            
+
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>
                 </div>
-            
+
                 <div class="form-group">
                     <label for="password">Пароль</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-            
+
                 <div class="form-group">
                     <label for="confirm">Подтвердите пароль</label>
                     <input type="password" id="confirm" name="confirm" required>
                 </div>
-            
+
                 <button type="submit" class="cta-button">Зарегистрироваться</button>
             </form>
-
-
 
             <form id="login-form" action="/login" method="post"
                 style="display: {{ if eq .ActiveTab `login` }}block{{ else }}none{{ end }};">
@@ -55,6 +54,7 @@
                 </div>
                 <button type="submit" class="cta-button">Войти</button>
             </form>
+
             {{ if .IsLoggedIn }}
             <a href="/logout" class="btn btn--secondary" style="margin-top: 2rem; display: inline-block;">
                 Выйти из аккаунта
@@ -83,9 +83,17 @@
     {{ else }}
     <h1 class="dashboard__heading">Личный кабинет</h1>
 
+    {{/* Если админ, показываем ссылку на управление программами */}}
+    {{ if .IsAdmin }}
+    <a href="/admin/programs" class="btn btn--primary" style="margin-bottom: 1.5rem; display: inline-block;">
+        Управление программами
+    </a>
+    {{ end }}
+
     <a href="/logout" class="btn btn--secondary" style="margin-bottom: 1.5rem; display: inline-block;">
         Выйти из аккаунта
     </a>
+
     <table class="dashboard__table">
         <thead>
             <tr>

@@ -1,0 +1,19 @@
+{{ define "title" }}Админка — Программы{{ end }}
+{{ define "content" }}
+<section class="container">
+    <h1>Управление программами</h1>
+    <a href="/admin/programs/new" class="btn btn--primary" style="margin-bottom: 1rem;">+ Новая программа</a>
+    <ul>
+        {{ range .Programs }}
+        <li style="margin-bottom: 0.5rem;">
+            <strong>{{ .Name }}</strong> — {{ .Description }} ({{ len .Days }} дн.)
+            <a href="/admin/programs/{{ .ID }}/edit" class="btn btn--secondary"
+                style="margin-left: 1rem;">Редактировать</a>
+            <a href="/admin/programs/{{ .ID }}/delete" class="btn btn--danger" style="margin-left: 0.5rem;">Удалить</a>
+        </li>
+        {{ else }}
+        <li>Нет программ</li>
+        {{ end }}
+    </ul>
+</section>
+{{ end }}

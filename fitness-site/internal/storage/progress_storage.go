@@ -10,9 +10,9 @@ type ProgressPGStorage struct {
     pool *pgxpool.Pool
 }
 
-// Интерфейс ProgressStorage (для внедрения зависимостей)
 type ProgressStorage interface {
     Create(ctx context.Context, userID, programID, day int) error
+    Delete(ctx context.Context, userID, programID, day int) error
     List(ctx context.Context, userID, programID int) ([]models.Progress, error)
 }
 
@@ -23,7 +23,16 @@ func NewProgressStorage(pool *pgxpool.Pool) *ProgressPGStorage {
 func (s *ProgressPGStorage) Create(ctx context.Context, userID, programID, day int) error {
     _, err := s.pool.Exec(
         ctx,
-        "INSERT INTO progress(user_id, program_id, day, completed_at) VALUES ($1, $2, $3, NOW())",
+        "INSERT INTO progress(user_id, program_id, day, completed_at) VALUES ($1, $2, $3, NOW()) ON CONFLICT DO NOTHING",
+        userID, programID, day,
+    )
+    return err
+}
+
+func (s *ProgressPGStorage) Delete(ctx context.Context, userID, programID, day int) error {
+    _, err := s.pool.Exec(
+        ctx,
+        "DELETE FROM progress WHERE user_id = $1 AND program_id = $2 AND day = $3",
         userID, programID, day,
     )
     return err

@@ -16,7 +16,7 @@ func ProfileEditHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Получаем пользователя через UserService (добавь метод GetByID если надо)
+    // Получаем пользователя через UserService 
     user, err := UserService.GetByID(r.Context(), userID)
     if err != nil {
         http.Error(w, "Ошибка загрузки профиля", http.StatusInternalServerError)

@@ -1,5 +1,4 @@
 package handlers
-
 import (
 	"html/template"
 	"log"
@@ -7,25 +6,21 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
 	"github.com/go-chi/chi/v5"
 	"fitness-site/internal/middleware"
 	"fitness-site/internal/models"
 )
-
 func AdminProgramsList(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUser(r)
 	if !ok || !user.IsAdmin {
 		http.Error(w, "Доступ запрещён", http.StatusForbidden)
 		return
 	}
-
 	programs, err := ProgramService.GetAllPrograms(r.Context())
 	if err != nil {
 		http.Error(w, "Ошибка загрузки программ", http.StatusInternalServerError)
 		return
 	}
-
 	tmpl, err := template.ParseFiles(
 		filepath.Join("internal", "templates", "base.html"),
 		filepath.Join("internal", "templates", "admin_prog.html"),
@@ -35,7 +30,6 @@ func AdminProgramsList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка шаблона", http.StatusInternalServerError)
 		return
 	}
-
 	data := map[string]interface{}{
 		"Programs":   programs,
 		"IsLoggedIn": true,
@@ -46,14 +40,12 @@ func AdminProgramsList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка рендеринга шаблона", http.StatusInternalServerError)
 	}
 }
-
 func AdminNewProgramForm(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUser(r)
 	if !ok || !user.IsAdmin {
 		http.Error(w, "Доступ запрещён", http.StatusForbidden)
 		return
 	}
-
 	tmpl, err := template.ParseFiles(
 		filepath.Join("internal", "templates", "base.html"),
 		filepath.Join("internal", "templates", "admin_program_form.html"),
@@ -63,7 +55,6 @@ func AdminNewProgramForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка шаблона", http.StatusInternalServerError)
 		return
 	}
-
 	data := map[string]interface{}{
 		"IsLoggedIn": true,
 		"IsAdmin":    true,
@@ -73,14 +64,12 @@ func AdminNewProgramForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка рендеринга шаблона", http.StatusInternalServerError)
 	}
 }
-
 func AdminNewProgramSubmit(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUser(r)
 	if !ok || !user.IsAdmin {
 		http.Error(w, "Доступ запрещён", http.StatusForbidden)
 		return
 	}
-
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Некорректные данные", http.StatusBadRequest)
 		return
@@ -105,14 +94,12 @@ func AdminNewProgramSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/admin/programs", http.StatusSeeOther)
 }
-
 func AdminEditProgramForm(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUser(r)
 	if !ok || !user.IsAdmin {
 		http.Error(w, "Доступ запрещён", http.StatusForbidden)
 		return
 	}
-
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -124,7 +111,6 @@ func AdminEditProgramForm(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-
 	tmpl, err := template.ParseFiles(
 		filepath.Join("internal", "templates", "base.html"),
 		filepath.Join("internal", "templates", "admin_program_edit.html"),
@@ -134,7 +120,6 @@ func AdminEditProgramForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка шаблона", http.StatusInternalServerError)
 		return
 	}
-
 	data := map[string]interface{}{
 		"Program":    prog,
 		"IsLoggedIn": true,
@@ -145,14 +130,12 @@ func AdminEditProgramForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка рендеринга шаблона", http.StatusInternalServerError)
 	}
 }
-
 func AdminEditProgramSubmit(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUser(r)
 	if !ok || !user.IsAdmin {
 		http.Error(w, "Доступ запрещён", http.StatusForbidden)
 		return
 	}
-
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -185,14 +168,12 @@ func AdminEditProgramSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/admin/programs", http.StatusSeeOther)
 }
-
 func AdminDeleteProgram(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUser(r)
 	if !ok || !user.IsAdmin {
 		http.Error(w, "Доступ запрещён", http.StatusForbidden)
 		return
 	}
-
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
